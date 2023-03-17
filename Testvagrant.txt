@@ -1,0 +1,69 @@
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+
+public class RecentlyPlayedStore {
+  private int capacity;
+  private int size;
+  private Map<String, LinkedList<Map<String, Object>>> store;
+
+  public RecentlyPlayedStore(int capacity) {
+    this.capacity = capacity;
+    this.size = 0;
+    this.store = new HashMap<>();
+  }
+
+  public void addSong(String userName, Song song) {
+    if (!store.containsKey(userName)) {
+      store.put(userName, new LinkedList<Map<String, Object>>());
+    }
+    LinkedList<Map<String, Object>> songsList = store.get(userName);
+    Map<String, Object> songUserMap = new HashMap<>();
+    songUserMap.put("song", song);
+    songUserMap.put("user", userName);
+    songsList.addLast(songUserMap);
+    size++;
+    if (size > capacity) {
+      removeLeastRecentlyPlayedSong();
+    }
+  }
+
+  private void removeLeastRecentlyPlayedSong() {
+    Map.Entry<String, LinkedList<Map<String, Object>>> oldestUserSongsEntry = null;
+    long oldestTimestamp = Long.MAX_VALUE;
+    for (Map.Entry<String, LinkedList<Map<String, Object>>> entry : store.entrySet()) {
+      LinkedList<Map<String, Object>> songsList = entry.getValue();
+      if (!songsList.isEmpty()) {
+        Map<String, Object> oldestSongUserMap = songsList.getFirst();
+        Song oldestSong = (Song) oldestSongUserMap.get("song");
+        if (oldestSong.getTimestamp() < oldestTimestamp) {
+          oldestTimestamp = oldestSong.getTimestamp();
+          oldestUserSongsEntry = entry;
+        }
+      }
+    }
+    if (oldestUserSongsEntry != null) {
+      LinkedList<Map<String, Object>> oldestUserSongsList = oldestUserSongsEntry.getValue();
+      oldestUserSongsList.removeFirst();
+      size--;
+      if (oldestUserSongsList.isEmpty()) {
+        store.remove(oldestUserSongsEntry.getKey());
+      }
+    }
+  }
+
+  public LinkedList<Song> getRecentlyPlayedSongs(String userName) {
+    LinkedList<Song> songsList = new LinkedList<>();
+    if (store.containsKey(userName)) {
+      LinkedList<Map<String, Object>> userSongsList = store.get(userName);
+      for (Map<String, Object> songUserMap : userSongsList) {
+        Song song = (Song) songUserMap.get("song");
+        songsList.add(song);
+      }
+    }
+    return songsList;
+  }
+}
+
+
+In the addSong method, you first check if the user already has a linked list of songs in the store. If not, you create a new linked list for the user. Then you create a new map with the song and user information and add it to the end of the user's linked list.
